@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
 from .models import (
@@ -11,29 +11,13 @@ from .models import (
 )
 
 
-def is_get_score(submissions, total_questions):
-    total_score = sum(
-        1 for submission in submissions
-        if submission.selected_choice.is_correct
-    )
-    possible_score = total_questions
-
-    grade = (
-        int((total_score / possible_score) * 100)
-        if possible_score > 0
-        else 0
-    )
-
-    return total_score, possible_score, grade
-
-
 def course_details(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
 
     return render(
         request,
-        'onlinecourse/course_details_bootstrap.html',
-        {'course': course},
+        "onlinecourse/course_details_bootstrap.html",
+        {"course": course},
     )
 
 
@@ -54,17 +38,20 @@ def exam(request, course_id):
 
     return render(
         request,
-        'onlinecourse/exam.html',
+        "onlinecourse/exam.html",
         {
-            'course': course,
-            'questions': questions,
-            'enrollment': enrollment,
+            "course": course,
+            "questions": questions,
+            "enrollment": enrollment,
         },
     )
 
 
 @login_required
 def submit(request, course_id):
+    if request.method != "POST":
+        return redirect("exam", course_id=course_id)
+
     course = get_object_or_404(Course, pk=course_id)
     questions = course.questions.all()
 
@@ -73,82 +60,43 @@ def submit(request, course_id):
         user=request.user,
     )
 
-    enrollment = get_object_or_404(
-        Enrollment,
+    enrollment, _ = Enrollment.objects.get_or_create(
         learner=learner,
         course=course,
     )
 
-    total = questions.count()
+    # Create a submission for this attempt.
+    submission = Submission.objects.create(
+        enrollment=enrollment,
+    )
 
+    # Save the selected choices belonging to this course's questions.
     for question in questions:
-        choice_key = request.POST.get(
-            f'choice_{question.id}'
+        choice_id = request.POST.get(
+            f"choice_{question.id}"
         )
 
-        if not choice_key:
+        if not choice_id:
             continue
 
-        try:
-            selected = Choice.objects.get(
-                pk=choice_key,
-                question=question,
-            )
+        choice = Choice.objects.filter(
+            pk=choice_id,
+            question=question,
+        ).first()
 
-            Submission.objects.update_or_create(
-                enrollment=enrollment,
-                question=question,
-                defaults={
-                    'selected_choice': selected,
-                },
-            )
+        if choice is not None:
+            submission.choices.add(choice)
 
-        except Choice.DoesNotExist:
-            continue
-
-    submissions = list(
-        Submission.objects.filter(
-            enrollment=enrollment,
-            question__course=course,
-        ).select_related(
-            'question',
-            'selected_choice',
-        )
-    )
-
-    total_score, possible_score, grade = is_get_score(
-        submissions,
-        total,
-    )
-
-    correct = total_score
-    passed = grade >= 50
-
-    selected_ids = {
-        submission.question_id: submission.selected_choice_id
-        for submission in submissions
-    }
-
-    return render(
-        request,
-        'onlinecourse/exam_result.html',
-        {
-            'course': course,
-            'grade': grade,
-            'score': grade,
-            'correct': correct,
-            'total': total,
-            'total_score': total_score,
-            'possible_score': possible_score,
-            'passed': passed,
-            'submissions': submissions,
-            'selected_ids': selected_ids,
-        },
+    # Redirect to the result view after saving the answers.
+    return redirect(
+        "exam_result",
+        course_id=course.id,
+        submission_id=submission.id,
     )
 
 
 @login_required
-def show_exam_result(request, course_id):
+def show_exam_result(request, course_id, submission_id):
     course = get_object_or_404(Course, pk=course_id)
 
     learner = get_object_or_404(
@@ -162,46 +110,53 @@ def show_exam_result(request, course_id):
         course=course,
     )
 
+    submission = get_object_or_404(
+        Submission,
+        pk=submission_id,
+        enrollment=enrollment,
+    )
+
     questions = course.questions.all()
 
-    submissions = list(
-        Submission.objects.filter(
-            enrollment=enrollment,
-            question__course=course,
-        ).select_related(
-            'question',
-            'selected_choice',
-        )
+    selected_ids = list(
+        submission.choices.values_list("id", flat=True)
     )
+
+    # Calculate earned points and possible points.
+    grade = 0
+    possible = 0
+    correct = 0
+
+    for question in questions:
+        possible += question.grade
+
+        if question.is_get_score(selected_ids):
+            grade += question.grade
+            correct += 1
 
     total = questions.count()
 
-    total_score, possible_score, grade = is_get_score(
-        submissions,
-        total,
-    )
+    # Percentage score for displaying the result.
+    score = round(grade * 100 / possible) if possible > 0 else 0
+    passed = score >= 50
 
-    correct = total_score
-    passed = grade >= 50
-
-    selected_ids = {
-        submission.question_id: submission.selected_choice_id
-        for submission in submissions
+    context = {
+        "course": course,
+        "submission": submission,
+        "questions": questions,
+        "selected_ids": selected_ids,
+        "grade": grade,
+        "possible": possible,
+        "total_score": grade,
+        "possible_score": possible,
+        "score": score,
+        "correct": correct,
+        "total": total,
+        "passed": passed,
     }
 
     return render(
         request,
-        'onlinecourse/exam_result.html',
-        {
-            'course': course,
-            'grade': grade,
-            'score': grade,
-            'correct': correct,
-            'total': total,
-            'total_score': total_score,
-            'possible_score': possible_score,
-            'passed': passed,
-            'submissions': submissions,
-            'selected_ids': selected_ids,
-        },
+        "onlinecourse/exam_result_bootstrap.html",
+        context,
     )
