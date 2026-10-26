@@ -91,7 +91,7 @@ class Choice(models.Model):
         on_delete=models.CASCADE,
         related_name="choices",
     )
-    choice_text = models.CharField(max_length=200)
+    choice_text = models.CharField(max_length=100)
     votes = models.IntegerField(default=0)
     is_correct = models.BooleanField(default=False)
 
@@ -112,8 +112,7 @@ class Submission(models.Model):
 
     def __str__(self):
         return (
-            f"{self.enrollment.learner.user.username},"
-            f"{self.enrollment.course.name}"
+            f"Submission {self.id} for enrollment {self.enrollment.id}"
         )
 
 
