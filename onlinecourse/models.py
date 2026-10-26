@@ -13,7 +13,11 @@ class Course(models.Model):
 
 
 class Instructor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="instructor")
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="instructor"
+    )
     full_name = models.CharField(max_length=100)
     bio = models.TextField(blank=True)
 
@@ -22,7 +26,11 @@ class Instructor(models.Model):
 
 
 class Learner(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="learner")
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="learner"
+    )
     full_name = models.CharField(max_length=100)
     enrolled_at = models.DateTimeField(auto_now_add=True)
 
@@ -31,8 +39,16 @@ class Learner(models.Model):
 
 
 class Enrollment(models.Model):
-    learner = models.ForeignKey(Learner, on_delete=models.CASCADE, related_name="enrollments")
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
+    learner = models.ForeignKey(
+        Learner,
+        on_delete=models.CASCADE,
+        related_name="enrollments"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="enrollments"
+    )
     enrolled_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -44,30 +60,45 @@ class Enrollment(models.Model):
 
 class Question(models.Model):
     course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, related_name="questions", null=True, blank=True
+        Course,
+        on_delete=models.CASCADE,
+        related_name="questions",
+        null=True,
+        blank=True,
     )
     question_text = models.CharField(max_length=200)
-    pub_date = models.DateTimeField("date published", default=timezone.now)
+    pub_date = models.DateTimeField(
+        "date published",
+        default=timezone.now
+    )
     grade = models.IntegerField(default=1)
 
     def __str__(self):
         return self.question_text
 
     def is_get_score(self, selected_ids):
-        """Return True only when the learner selected exactly the correct choices."""
         correct_ids = set(
-            self.choices.filter(is_correct=True).values_list("id", flat=True)
+            self.choices.filter(is_correct=True)
+            .values_list("id", flat=True)
         )
+
         if not correct_ids:
             return False
+
         selected_for_question = set(
-            self.choices.filter(id__in=selected_ids).values_list("id", flat=True)
+            self.choices.filter(id__in=selected_ids)
+            .values_list("id", flat=True)
         )
+
         return selected_for_question == correct_ids
 
 
 class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="choices")
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name="choices"
+    )
     choice_text = models.CharField(max_length=100)
     votes = models.IntegerField(default=0)
     is_correct = models.BooleanField(default=False)
@@ -77,8 +108,16 @@ class Choice(models.Model):
 
 
 class Submission(models.Model):
-    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name="submissions")
-    choices = models.ManyToManyField(Choice, related_name="submissions", blank=True)
+    enrollment = models.ForeignKey(
+        Enrollment,
+        on_delete=models.CASCADE,
+        related_name="submissions"
+    )
+    choices = models.ManyToManyField(
+        Choice,
+        related_name="submissions",
+        blank=True
+    )
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -86,7 +125,11 @@ class Submission(models.Model):
 
 
 class Lesson(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lessons")
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="lessons"
+    )
     title = models.CharField(max_length=200)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
