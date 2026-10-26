@@ -1,8 +1,0 @@
-PS C:\Users\PC> python
-Python 3.10.0 (default, Oct  4 2021, 17:55:01) [MSC v.1929 64 bit (AMD64)] on win32
-Type "help", "copyright", "credits" or "license" for more information.
->>> from EmotionDetection.emotion_detection import emotion_detector
->>> result = emotion_detector("I am so angry and frustrated right now")
->>> print(result)
-{'anger': 0.92, 'disgust': 0.03, 'fear': 0.02, 'joy': 0.01, 'sadness': 0.02, 'dominant_emotion': 'anger'}
->>>

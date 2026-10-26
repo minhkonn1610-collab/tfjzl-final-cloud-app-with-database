@@ -1,7 +1,0 @@
-PS C:\Users\PC> pylint server.py
--------------------------------------------------------------------
-Your code has been rated at 10.00/10 (previous run: 7.50/10, +2.50)
-
-PS C:\Users\PC> pylint emotion_detection.py
--------------------------------------------------------------------
-Your code has been rated at 10.00/10 (previous run: 6.00/10, +4.00)

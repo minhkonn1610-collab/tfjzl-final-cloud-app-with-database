@@ -1,0 +1,19 @@
+{% extends 'onlinecourse/base.html' %}
+{% block title %}{{ course.name }}{% endblock %}
+{% block content %}
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <h1 class="card-title">{{ course.name }}</h1>
+  <p class="text-muted">Created on {{ course.created_at|date:'F j, Y' }}</p>
+  <p class="card-text">{{ course.description }}</p>
+  <a class="btn btn-primary" href="{% url 'onlinecourse:exam' course.id %}">Take assessment</a>
+</div></div>
+<section aria-labelledby="lessons-heading">
+  <h2 id="lessons-heading" class="h3 mb-3">Course lessons</h2>
+  {% for lesson in course.lessons.all %}
+    <article class="card mb-3"><div class="card-body">
+      <h3 class="h5">{{ lesson.title }}</h3>
+      <p class="mb-0">{{ lesson.content|linebreaksbr }}</p>
+    </div></article>
+  {% empty %}<p>No lessons have been added to this course yet.</p>{% endfor %}
+</section>
+{% endblock %}
