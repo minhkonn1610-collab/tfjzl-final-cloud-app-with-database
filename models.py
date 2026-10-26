@@ -12,7 +12,11 @@ class Course(models.Model):
 
 
 class Instructor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor')
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="instructor",
+    )
     full_name = models.CharField(max_length=200)
     bio = models.TextField(blank=True)
 
@@ -21,7 +25,11 @@ class Instructor(models.Model):
 
 
 class Learner(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='learner')
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="learner",
+    )
     full_name = models.CharField(max_length=200)
     enrolled_at = models.DateTimeField(auto_now_add=True)
 
@@ -30,28 +38,59 @@ class Learner(models.Model):
 
 
 class Enrollment(models.Model):
-    learner = models.ForeignKey(Learner, on_delete=models.CASCADE, related_name='enrollments')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
+    learner = models.ForeignKey(
+        Learner,
+        on_delete=models.CASCADE,
+        related_name="enrollments",
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="enrollments",
+    )
     enrolled_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('learner', 'course')
+        unique_together = ("learner", "course")
 
     def __str__(self):
         return f"{self.learner.full_name} enrolled in {self.course.name}"
 
 
 class Question(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='questions', null=True, blank=True)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="questions",
+        null=True,
+        blank=True,
+    )
     question_text = models.CharField(max_length=200)
-    pub_date = models.DateTimeField('date published')
+    pub_date = models.DateTimeField("date published")
+    grade = models.IntegerField(default=1)
 
     def __str__(self):
         return self.question_text
 
+    def is_get_score(self, selected_ids):
+        all_answers = self.choices.filter(
+            is_correct=True
+        ).count()
+
+        selected_correct = self.choices.filter(
+            is_correct=True,
+            id__in=selected_ids,
+        ).count()
+
+        return all_answers > 0 and all_answers == selected_correct
+
 
 class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='choices')
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name="choices",
+    )
     choice_text = models.CharField(max_length=200)
     votes = models.IntegerField(default=0)
     is_correct = models.BooleanField(default=False)
@@ -61,20 +100,29 @@ class Choice(models.Model):
 
 
 class Submission(models.Model):
-    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name='submissions')
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='submissions')
-    selected_choice = models.ForeignKey(Choice, on_delete=models.CASCADE, related_name='submissions')
-    submitted_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('enrollment', 'question')
+    enrollment = models.ForeignKey(
+        Enrollment,
+        on_delete=models.CASCADE,
+        related_name="submissions",
+    )
+    choices = models.ManyToManyField(
+        Choice,
+        related_name="submissions",
+    )
 
     def __str__(self):
-        return f"Submission by {self.enrollment.learner.full_name} - {self.question.question_text[:50]}"
+        return (
+            f"{self.enrollment.learner.user.username},"
+            f"{self.enrollment.course.name}"
+        )
 
 
 class Lesson(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="lessons",
+    )
     title = models.CharField(max_length=200)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
