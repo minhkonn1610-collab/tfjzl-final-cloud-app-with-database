@@ -32,31 +32,87 @@ class LessonInline(admin.StackedInline):
 
 class QuestionAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None, {"fields": ["question_text", "course", "grade"]}),
-        ("Date information", {"fields": ["pub_date"]}),
+        (
+            None,
+            {
+                "fields": [
+                    "question_text",
+                    "course",
+                    "grade",
+                ]
+            },
+        ),
+        (
+            "Date information",
+            {
+                "fields": ["pub_date"],
+            },
+        ),
     ]
+
     inlines = [ChoiceInline]
-    list_display = ("question_text", "pub_date", "was_published_recently")
+    list_display = (
+        "question_text",
+        "pub_date",
+        "was_published_recently",
+    )
     list_filter = ["pub_date"]
     search_fields = ["question_text"]
 
-    @admin.display(boolean=True, description="Published recently?")
+    @admin.display(
+        boolean=True,
+        description="Published recently?"
+    )
     def was_published_recently(self, obj):
-        return timezone.now() - datetime.timedelta(days=1) <= obj.pub_date <= timezone.now()
+        return (
+            timezone.now() - datetime.timedelta(days=1)
+            <= obj.pub_date
+            <= timezone.now()
+        )
 
 
 class LessonAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None, {"fields": ["title", "course", "content"]}),
-        ("Date information", {"fields": ["created_at"]}),
+        (
+            None,
+            {
+                "fields": [
+                    "title",
+                    "course",
+                    "content",
+                ]
+            },
+        ),
+        (
+            "Date information",
+            {
+                "fields": ["created_at"],
+            },
+        ),
     ]
+
     readonly_fields = ["created_at"]
     list_display = ("title", "course", "created_at")
-    search_fields = ["title", "content", "course__name"]
+    search_fields = [
+        "title",
+        "content",
+        "course__name",
+    ]
 
 
 class CourseAdmin(admin.ModelAdmin):
-    fieldsets = [(None, {"fields": ["name", "description"]})]
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": [
+                    "name",
+                    "description",
+                ]
+            },
+        ),
+    ]
+
     list_display = ("name", "created_at")
     list_filter = ["created_at"]
     search_fields = ["name", "description"]
