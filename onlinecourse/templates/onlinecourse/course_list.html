@@ -1,0 +1,14 @@
+{% extends 'onlinecourse/base.html' %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+<h1 class="mb-4">Available courses</h1>
+<div class="row g-3">
+  {% for course in courses %}
+  <div class="col-md-6 col-lg-4"><div class="card h-100 shadow-sm"><div class="card-body">
+    <h2 class="h5 card-title">{{ course.name }}</h2>
+    <p class="card-text">{{ course.description|truncatewords:30 }}</p>
+    <a class="btn btn-primary" href="{% url 'onlinecourse:course_details' course.id %}">View course</a>
+  </div></div></div>
+  {% empty %}<p>No courses have been added yet. Create one in the admin site.</p>{% endfor %}
+</div>
+{% endblock %}

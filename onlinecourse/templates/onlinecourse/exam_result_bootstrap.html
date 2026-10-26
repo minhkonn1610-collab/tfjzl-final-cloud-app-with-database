@@ -1,0 +1,23 @@
+{% extends 'onlinecourse/base.html' %}
+{% block title %}Assessment result — {{ course.name }}{% endblock %}
+{% block content %}
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <h1 class="h2">Assessment result</h1>
+  <p class="mb-1">Course: <strong>{{ course.name }}</strong></p>
+  <p class="mb-1">Score: <strong>{{ total_score }} / {{ possible_score }}</strong></p>
+  <p class="mb-3">Percentage: <strong>{{ grade }}%</strong></p>
+  {% if passed %}<div class="alert alert-success mb-0">Passed</div>{% else %}<div class="alert alert-warning mb-0">Not passed yet</div>{% endif %}
+</div></div>
+<h2 class="h4 mb-3">Answer review</h2>
+{% for item in question_results %}
+  <article class="card mb-3"><div class="card-body">
+    <h3 class="h5">{{ forloop.counter }}. {{ item.question.question_text }}</h3>
+    {% if item.is_correct %}<span class="badge text-bg-success">Correct</span>{% else %}<span class="badge text-bg-danger">Incorrect</span>{% endif %}
+    <p class="mt-3 mb-1"><strong>Your selections:</strong></p>
+    <ul>{% for choice in item.selected_choices %}<li>{{ choice.choice_text }}</li>{% empty %}<li>No answer selected.</li>{% endfor %}</ul>
+    <p class="mb-1"><strong>Correct answer(s):</strong></p>
+    <ul>{% for choice in item.correct_choices %}<li>{{ choice.choice_text }}</li>{% empty %}<li>No correct choices configured.</li>{% endfor %}</ul>
+  </div></article>
+{% empty %}<p>No assessment questions were configured.</p>{% endfor %}
+<a class="btn btn-primary" href="{% url 'onlinecourse:course_details' course.id %}">Back to course</a>
+{% endblock %}

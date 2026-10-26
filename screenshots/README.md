@@ -1,0 +1,1 @@
+Preserve any screenshots previously accepted by the Coursera grader when moving this project into the submission repository. In particular, do not delete `03-admin-site.png` from the existing repo without checking which path the grader uses.
